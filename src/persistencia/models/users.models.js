@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
-// Creación del modelo de usuarios
-const User = mongoose.model('User', usersSchema);
+const mongoose = require('mongoose')
+
 
 const usersSchema = new mongoose.Schema({
   first_name: {
@@ -32,4 +32,6 @@ const usersSchema = new mongoose.Schema({
   }
 })
 
-export const usersModel = mongoose.model('Users', usersSchema)
+const User = mongoose.model('User', usersSchema);
+module.exports = User;
+
