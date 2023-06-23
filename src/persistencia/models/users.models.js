@@ -1,7 +1,4 @@
-import mongoose from 'mongoose'
-
-const mongoose = require('mongoose')
-
+import mongoose from "mongoose";
 
 const usersSchema = new mongoose.Schema({
   first_name: {
@@ -28,10 +25,8 @@ const usersSchema = new mongoose.Schema({
   },
   isAdmid: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 
-const User = mongoose.model('User', usersSchema);
-module.exports = User;
-
+export const usersModel = mongoose.model("Users", usersSchema);

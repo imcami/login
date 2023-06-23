@@ -1,8 +1,10 @@
-import e, { Router } from "express";
+import { Router } from "express";
+import passport from "passport";
 
 const router = Router();
 
-router.post("/", async (req, res) => {
+//LOGIN SIN PASSPORT
+router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
     console.log(username, password);
@@ -31,5 +33,14 @@ router.post("/", async (req, res) => {
   console.log(req);
   res.send("Bienvenido");
 });
+
+//LOGIN CON PASSPORT
+router.post(
+  "/login",
+  passport.authenticate("login", {
+    failureRedirect: "/api/views/errorLogin",
+    successRedirect: "/api/views/profile",
+  })
+);
 
 export default router;

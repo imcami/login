@@ -1,34 +1,76 @@
-import { Router } from "express";
-import { usersModel } from "../persistencia/models/users.models.js";
+import { Router } from 'express'
+import { usersModel } from '../persistencia/models/users.models.js'
 
-const router = Router();
+import { hashData, compareData } from '../utils.js'
+import passport from 'passport'
 
-// Creación del modelo de usuarios
-const users = mongoose.model("User", userSchema);
+const router = Router()
 
-router.post("/signup", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(409).json({ error: "El usuario ya existe" });
+
+router.get('/logout', (req, res) => {
+  req.session.destroy((error) => {
+    if (error) {
+      console.log(error)
+      res.send(error)
+    } else {
+      res.redirect('/api/views')
     }
-    // Hash de la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
-    // Crear nuevo usuario
-    const newUser = new users({
-      username,
-      password: hashedPassword,
-    });
-    await newUser.save();
+  })
+})
 
-    res.status(201).json({ message: "Registro exitoso" });
-  } catch (error) {
-    res.status(500).json({ error: "Error en el servidor" });
+// persistencia mongo
+
+router.post('/signup', async (req, res) => {
+  const { email, password } = req.body
+  const user = await usersModel.findOne({ email })
+  if (user) {
+    return res.redirect('/api/views/errorSignup')
   }
-  users.push(req.body);
-  res.redirect("/api/views");
-});
+  const hashPassword = await hashData(password)
+  const newUser = { ...req.body, password: hashPassword }
+  await usersModel.create(newUser)
+  res.redirect('/api/views')
+})
 
-export default router;
+// login sin passport
+// router.post('/login', async (req, res) => {
+//   const { email, password } = req.body
+//   const user = await usersModel.findOne({ email })
+//   if (!user) {
+//     return res.redirect('/api/views/errorLogin')
+//   }
+//   const isPasswordValid = await compareData(password, user.password)
+//   if (!isPasswordValid) {
+//     return res.status(400).json({ message: 'Email or password not valid' })
+//   }
+//   req.session.user = user
+//   //req.session.email = email
+//   //req.session.password = password
+//   res.redirect('/api/views/profile')
+// })
+
+//login con passport
+router.post(
+  '/login',
+  passport.authenticate('login', {
+    passReqToCallback: true,
+    failureRedirect: '/api/views/errorLogin',
+    successRedirect: '/api/views/profile',
+    failureMessage: '',
+  })
+)
+
+// github
+
+router.get(
+  '/githubSignup',
+  passport.authenticate('githubSignup', { scope: ['user:email'] })
+)
+
+router.get('/github', 
+  passport.authenticate('githubSignup', { failureRedirect: '/api/views' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/api/views/profile');
+  });
+export default router
